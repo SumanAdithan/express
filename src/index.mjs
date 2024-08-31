@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { response } from 'express';
 
 const app = express();
 
@@ -49,11 +49,27 @@ app.post('/api/users', (req, res) => {
     const { body } = req;
     const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
     mockUsers.push(newUser);
-    return res.status(200).send(newUser);
+    return res.status(201).send(newUser);
 });
 
 app.get('/api/products', (req, res) => {
     res.send([{ id: 123, name: 'chicken rice', price: 12.99 }]);
+});
+
+// put request -
+app.put('/api/users/:id', (req, res) => {
+    const {
+        body,
+        params: { id },
+    } = req;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) return res.sendStatus(400);
+
+    const findUserIndex = mockUsers.findIndex(user => user.id === parsedId);
+
+    if (findUserIndex === -1) return res.sendStatus(404);
+    mockUsers[findUserIndex] = { id: parsedId, ...body };
+    return res.sendStatus(200);
 });
 
 app.listen(PORT, () => console.log(`Running on Port ${PORT}`));
