@@ -1,4 +1,6 @@
 import express, { request, response } from 'express';
+import { query, validationResult, body, matchedData, checkSchema } from 'express-validator';
+import { createUserValidationSchema } from './utils/validationSchemas.mjs';
 
 const app = express();
 
@@ -56,15 +58,27 @@ app.get(
 );
 
 // query params - localhost:3000/users or localhost:3000/users?filter=username&value=jo
-app.get('/api/users', (req, res) => {
-    const {
-        query: { filter, value },
-    } = req;
+app.get(
+    '/api/users',
+    query('filter')
+        .isString()
+        .notEmpty()
+        .withMessage('Must not be empty')
+        .isLength({ min: 3, max: 10 })
+        .withMessage('Must be at least 3-10 characters'),
+    (req, res) => {
+        const result = validationResult(req);
+        console.log(result);
+        const {
+            query: { filter, value },
+        } = req;
 
-    if (filter && value) return res.send(mockUsers.filter(user => user[filter].includes(value)));
+        if (filter && value)
+            return res.send(mockUsers.filter(user => user[filter].includes(value)));
 
-    return res.send(mockUsers);
-});
+        return res.send(mockUsers);
+    }
+);
 
 // route params - localhost:3000/users/1
 app.get('/api/users/:id', resolveIndexByUserId, (req, res) => {
@@ -85,9 +99,14 @@ app.use(loggingMiddleware, (req, res, next) => {
 }); // middleware called when below post request handler (handler also a middleware)
 
 // post request - localhost:3000/api/users
-app.post('/api/users', (req, res) => {
-    const { body } = req;
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
+app.post('/api/users', checkSchema(createUserValidationSchema), (req, res) => {
+    const result = validationResult(req);
+    console.log(result);
+
+    if (!result.isEmpty()) return res.status(400).send({ errors: result.array() });
+
+    const data = matchedData(req);
+    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
     mockUsers.push(newUser);
     return res.status(201).send(newUser);
 });
