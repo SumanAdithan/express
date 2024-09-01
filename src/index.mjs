@@ -56,7 +56,7 @@ app.get('/api/products', (req, res) => {
     res.send([{ id: 123, name: 'chicken rice', price: 12.99 }]);
 });
 
-// put request -
+// put request - localhost:3000/api/users/1
 app.put('/api/users/:id', (req, res) => {
     const {
         body,
@@ -69,6 +69,22 @@ app.put('/api/users/:id', (req, res) => {
 
     if (findUserIndex === -1) return res.sendStatus(404);
     mockUsers[findUserIndex] = { id: parsedId, ...body };
+    return res.sendStatus(200);
+});
+
+app.patch('/api/users/:id', (req, res) => {
+    const {
+        body,
+        params: { id },
+    } = req;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) return res.sendStatus(400);
+
+    const findUserIndex = mockUsers.findIndex(user => user.id === parsedId);
+
+    if (findUserIndex === -1) return res.sendStatus(404);
+    mockUsers[findUserIndex] = { ...mockUsers[findUserIndex], ...body };
+
     return res.sendStatus(200);
 });
 
