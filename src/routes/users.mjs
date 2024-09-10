@@ -3,6 +3,7 @@ import { query, validationResult, body, matchedData, checkSchema } from 'express
 import { createUserValidationSchema } from '../utils/validationSchemas.mjs';
 import { mockUsers } from '../utils/constants.mjs';
 import { resolveIndexByUserId } from '../utils/middlewares.mjs';
+import session from 'express-session';
 
 const router = Router();
 
@@ -14,9 +15,9 @@ router.get('/api/users/:id', resolveIndexByUserId, (req, res) => {
     return res.send(findUser);
 });
 
-// query params - localhost:3000/users or localhost:3000/users?filter=username&value=jo
+// query params - localhost:3000/api/users or localhost:3000/api/users?filter=username&value=jo
 router.get(
-    'api/users',
+    '/api/users',
     query('filter')
         .isString()
         .notEmpty()
@@ -24,8 +25,16 @@ router.get(
         .isLength({ min: 3, max: 10 })
         .withMessage('Must be at least 3-10 characters'),
     (req, res) => {
+        console.log(req.session);
+        console.log(req.sessionID);
+        req.sessionStore.get(req.sessionID, (err, sessionData) => {
+            if (err) {
+                console.log(err);
+                throw err;
+            }
+            console.log(sessionData);
+        });
         const result = validationResult(req);
-        console.log(result);
         const {
             query: { filter, value },
         } = req;
