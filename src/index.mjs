@@ -4,8 +4,9 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
 import mongoose, { mongo } from 'mongoose';
-import './strategies/local-strategies.mjs';
+// import './strategies/local-strategies.mjs';
 import MongoStore from 'connect-mongo';
+import './strategies/discord-strategies.mjs';
 
 const app = express();
 
@@ -50,6 +51,13 @@ app.post('/api/auth/logout', (req, res) => {
         if (err) return res.sendStatus(400);
         res.sendStatus(200);
     });
+});
+
+app.get('/api/auth/discord', passport.authenticate('discord'));
+app.get('/api/auth/discord/redirect', passport.authenticate('discord'), (req, res) => {
+    console.log(req.session);
+    console.log(req.user);
+    res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 3000;
