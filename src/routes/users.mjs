@@ -5,16 +5,12 @@ import { resolveIndexByUserId } from '../utils/middlewares.mjs';
 import { User } from '../mongoose/schemas/user.mjs';
 import { createUserValidationSchema } from '../utils/validationSchemas.mjs';
 import { hashPassword } from '../utils/helpers.mjs';
+import { createUserHandler, getUserByIdHandler } from '../handlers/users.mjs';
 
 const router = Router();
 
 // route params - localhost:3000/users/1
-router.get('/api/users/:id', resolveIndexByUserId, (req, res) => {
-    const { findUserIndex } = req;
-    const findUser = mockUsers[findUserIndex];
-    if (!findUser) return res.sendStatus(404);
-    return res.send(findUser);
-});
+router.get('/api/users/:id', resolveIndexByUserId, getUserByIdHandler);
 
 // query params - localhost:3000/api/users or localhost:3000/api/users?filter=username&value=jo
 router.get(
@@ -48,21 +44,7 @@ router.get(
 );
 
 // post request - localhost:3000/api/users
-router.post('/api/users', checkSchema(createUserValidationSchema), async (req, res) => {
-    const result = validationResult(req);
-    if (!result.isEmpty()) return res.status(400).send(result.array());
-    const data = matchedData(req);
-    console.log(data);
-    data.password = hashPassword(data.password);
-    const newUser = new User(data);
-    try {
-        const savedUser = await newUser.save();
-        return res.status(201).send(savedUser);
-    } catch (err) {
-        console.log(err);
-        return res.sendStatus(400);
-    }
-});
+router.post('/api/users', checkSchema(createUserValidationSchema), createUserHandler);
 
 // put request - localhost:3000/api/users/1
 router.put('/api/users/:id', resolveIndexByUserId, (req, res) => {
